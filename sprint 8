@@ -1,0 +1,122 @@
+# ============================================================
+# 1. CARGA DEL DATASET Y EXPLORACIÓN INICIAL
+# ============================================================
+
+# Dataset incluido en R
+data("nottem")
+
+# Inspección de estructura
+print("=== Clase del dataset ===")
+print(class(nottem))
+
+print("=== Resumen estadístico ===")
+print(summary(nottem))
+
+print("=== Inicio y fin de la serie ===")
+print(start(nottem))
+print(end(nottem))
+
+print("=== Frecuencia de la serie ===")
+print(frequency(nottem))  # 12 = mensual
+
+# Gráfica inicial
+plot(nottem,
+     main = "Temperaturas Mensuales en Nottingham (1920-1939)",
+     xlab = "Año",
+     ylab = "Temperatura (°F)",
+     col = "blue")
+
+# Estadísticas básicas
+print("=== Media y desviación estándar ===")
+print(mean(nottem))
+print(sd(nottem))
+
+# ============================================================
+# 2. DESCOMPOSICIÓN DE LA SERIE (Tendencia, Estacionalidad, Ruido)
+# ============================================================
+
+descomp <- decompose(nottem)
+
+plot(descomp)
+
+print("=== Tendencia ===")
+print(descomp$trend)
+
+print("=== Estacionalidad ===")
+print(descomp$seasonal)
+
+print("=== Componente aleatorio ===")
+print(descomp$random)
+
+# ============================================================
+# 3. ANÁLISIS DE ESTACIONARIEDAD
+# ============================================================
+
+# Gráficos ACF y PACF
+acf(nottem, main = "ACF - nottem")
+pacf(nottem, main = "PACF - nottem")
+
+# Prueba Dickey-Fuller
+if(!require(tseries)) install.packages("tseries")
+library(tseries)
+
+print("=== Prueba Dickey-Fuller ===")
+print(adf.test(nottem))
+
+# ============================================================
+# 4. TRANSFORMACIÓN (Diferenciación si no es estacionaria)
+# ============================================================
+
+nottem_diff <- diff(nottem)
+
+plot(nottem_diff,
+     main = "Serie diferenciada de nottem",
+     ylab = "Diferencia de temperatura",
+     col = "red")
+
+acf(nottem_diff, main = "ACF - Serie diferenciada")
+pacf(nottem_diff, main = "PACF - Serie diferenciada")
+
+print("=== Prueba Dickey-Fuller tras diferenciación ===")
+print(adf.test(nottem_diff))
+
+# ============================================================
+# 5. DETECCIÓN DE VALORES ATÍPICOS
+# ============================================================
+
+# Boxplot para detectar outliers
+boxplot(nottem,
+        main = "Boxplot de temperaturas nottem",
+        ylab = "Temperatura (°F)",
+        col = "orange")
+
+# Identificación numérica de outliers
+Q1 <- quantile(nottem, 0.25)
+Q3 <- quantile(nottem, 0.75)
+IQR <- Q3 - Q1
+
+lim_inf <- Q1 - 1.5 * IQR
+lim_sup <- Q3 + 1.5 * IQR
+
+outliers <- nottem[nottem < lim_inf | nottem > lim_sup]
+
+print("=== Valores atípicos detectados ===")
+print(outliers)
+
+# Visualización en la serie temporal
+plot(nottem,
+     main = "Serie nottem con outliers destacados",
+     ylab = "Temperatura (°F)",
+     xlab = "Año",
+     col = "blue")
+points(time(outliers), outliers, col = "red", pch = 19)
+
+# ============================================================
+# 6. INTERPRETACIÓN (comentarios incluidos)
+# ============================================================
+
+print("=== Interpretación ===")
+print("La serie muestra una estacionalidad anual muy marcada: los inviernos son fríos y los veranos cálidos.")
+print("La tendencia es relativamente estable, sin un crecimiento claro.")
+print("La serie NO es estacionaria inicialmente, pero tras diferenciar se vuelve estacionaria.")
+print("Los valores atípicos corresponden a inviernos excepcionalmente fríos o veranos inusualmente cálidos.")
